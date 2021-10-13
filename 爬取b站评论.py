@@ -49,7 +49,7 @@ def mysql_id_select(id):
 def mysql_content_select(text):
     db = pymysql.connect(**config)
     cursor = db.cursor()
-    sql=f"select id from comment where content='{text}'"
+    sql=f"select id from comment where content='{text}' order by id desc"
     try:
         cursor.execute(sql)
     except:
@@ -58,7 +58,7 @@ def mysql_content_select(text):
         if cursor.fetchone()==():
             print("无此内容")
         else:
-            print(cursor.fetchone()[0])
+            print(cursor.fetchone())
     cursor.close()
     db.close()
 #下载id对应的头像图片到本地/img文件夹下
@@ -84,7 +84,7 @@ def b_crawler():
         #每页有20条评论，故循环20次
         for j in range(0,20):
             #爬取评论的相关消息
-            content=escape_string(data["replies"][j]["content"]["message"])#评论内容
+            content=escape_string(data["replies"][j]["content"]["message"].replace(" ",""))#评论内容
             com_address=escape_string('https://t.bilibili.com/560233713032161611/#reply'+data["replies"][j]['rpid_str']) #评论链接
             username=escape_string(data["replies"][j]['member']['uname'])  #作者名字
             work_out_time=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(data["replies"][j]['ctime'])) #发布时间（str类型）
@@ -108,17 +108,34 @@ if __name__ == '__main__':
     if selec=="yes":
         flag=1
         while flag!=0:
-            choice=int(input("请选择你要进行的操作:\n1.id查询(返回除图片以外的所有信息)\n"
-                             "2.内容查询（返回内容对应数据id\n3."))
+            try:
+                choice=int(input("请选择你要进行的操作:\n1.id查询(返回除图片以外的所有信息)\n"
+                                "2.内容查询（返回内容对应数据id\n"))
+            except:
+                print("wrong input")
+                break
+            else:
+                pass
             if choice==1:
-                id=int(input("输入id"))
-                mysql_id_select(id)
+                try:
+                    id=int(input("输入id\n"))
+                except:
+                    print("wrong input")
+                    break
+                else:
+                    mysql_id_select(id)
             elif choice==2:
-                text=input("输入内容")
+                text=escape_string(input("输入内容\n").replace(" ","").replace("\n",""))
                 mysql_content_select(text)
             else:
                 print("error!no this option!")
-            flag=int(input("输入0退出，输入1继续查询"))
+            try:
+                flag=int(input("输入0退出，输入1继续查询\n"))
+            except:
+                print("wrong input,auto exit!")
+                break
+            else:
+                pass
         else:
             print("已经退出查询")
     elif selec=="no":
